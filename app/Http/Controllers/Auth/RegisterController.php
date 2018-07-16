@@ -2,8 +2,9 @@
 
 namespace App\Http\Controllers\Auth;
 
-use App\User;
+use App\Entities\User;
 use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Foundation\Auth\RegistersUsers;
 
@@ -27,7 +28,7 @@ class RegisterController extends Controller
      *
      * @var string
      */
-    protected $redirectTo = '/home';
+    protected $redirectTo = '/my/account';
 
     /**
      * Create a new controller instance.
@@ -40,6 +41,38 @@ class RegisterController extends Controller
     }
 
     /**
+     * @param Request $request
+     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
+     */
+    public function register(Request $request)
+    {
+        try{
+            $this->validator($request->all())->validate();
+        } catch (\Exception $e){
+            dd($e);
+        }
+
+        $email = $request->input('email');
+        $password = $request->input('password');
+        $isAuth = $request->has('remember') ? true : false;
+
+        $objUser = $this->create(['email' => $email, 'password' => $password]);
+        if(!$objUser instanceof User){
+            //throw new \Exception('Can't create objUser);
+            return back()->with('error', 'Can\'t create objUser');
+        }
+        if($isAuth){
+            $this->guard()->login($objUser);
+        }
+
+        //$this->guard()->login($user);
+
+        /*return $this->registered($request, $user)
+            ?: redirect($this->redirectPath());*/
+        return redirect(route('account'))->with('success', 'You are log in!');
+    }
+
+    /**
      * Get a validator for an incoming registration request.
      *
      * @param  array  $data
@@ -48,7 +81,6 @@ class RegisterController extends Controller
     protected function validator(array $data)
     {
         return Validator::make($data, [
-            'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:6|confirmed',
         ]);
@@ -63,7 +95,6 @@ class RegisterController extends Controller
     protected function create(array $data)
     {
         return User::create([
-            'name' => $data['name'],
             'email' => $data['email'],
             'password' => bcrypt($data['password']),
         ]);
