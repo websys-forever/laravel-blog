@@ -29,9 +29,14 @@ Route::group(['middleware' => 'auth'], function (){
         \Auth::logout();
         return redirect(route('login'));
     })->name('logout');
+
+    //admin
+    Route::group(['middleware' => 'admin'], function () {
+        Route::get('/admin', 'Admin\AccountController@index')->name('admin');
+    });
 });
 
 
-Route::group(['middleware' => 'guest'], function () {
+/*Route::group(['middleware' => 'guest'], function () {
     Route::get('/register', 'Auth\RegisterController@showRegistrationForm')->name('register');
-});
+});*/
